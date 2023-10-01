@@ -16,6 +16,7 @@ jobs:
 
       - uses: ilammy/msvc-dev-cmd@v1
       - name: Build
+        shell: cmd
         run: build.bat
 
       - name: Create release
