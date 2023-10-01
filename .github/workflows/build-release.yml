@@ -15,6 +15,7 @@ jobs:
           persist-credentials: false
 
       - name: Build
+        shell: cmd
         run: build.bat
 
       - name: Create release
