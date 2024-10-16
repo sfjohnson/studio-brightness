@@ -15,7 +15,7 @@
 #include "resource.h"
 #include "hid.h"
 
-static HINSTANCE g_hInst = NULL;
+static HINSTANCE g_hInst = nullptr;
 
 static UINT const WMAPP_NOTIFYCALLBACK = WM_APP + 1;
 
@@ -43,7 +43,7 @@ BOOL                DeleteNotificationIcon();
 #define DOWN_KEY VK_LEFT
 #define UP_KEY VK_RIGHT
 
-static HHOOK hook = NULL;
+static HHOOK hook = nullptr;
 static bool holdKey1Down = false;
 static bool holdKey2Down = false;
 static ULONG currentBrightness = 30000;
@@ -59,7 +59,7 @@ static void onStepDown () {
   if (err < 0) {
     char errStr[100];
     snprintf(errStr, sizeof(errStr), "hid_setBrightness returned %d\n", err);
-    MessageBoxA(NULL, errStr, "studio-brightness", MB_ICONINFORMATION);
+    MessageBoxA(nullptr, errStr, "studio-brightness", MB_ICONINFORMATION);
     currentBrightness = 30000;
   }
 }
@@ -75,7 +75,7 @@ static void onStepUp () {
   if (err < 0) {
     char errStr[100];
     snprintf(errStr, sizeof(errStr), "hid_setBrightness returned %d\n", err);
-    MessageBoxA(NULL, errStr, "studio-brightness", MB_ICONINFORMATION);
+    MessageBoxA(nullptr, errStr, "studio-brightness", MB_ICONINFORMATION);
     currentBrightness = 30000;
   }
 }
@@ -106,15 +106,14 @@ LRESULT hookCallback(int nCode, WPARAM wParam, LPARAM lParam) {
 }
 
 int initKeyboardHook () {
-  hook = SetWindowsHookExW(WH_KEYBOARD_LL, hookCallback, NULL, 0);
-  if (hook == NULL) return -1;
-  return 0;
+  hook = SetWindowsHookExW(WH_KEYBOARD_LL, hookCallback, nullptr, 0);
+  return (hook) ? 0 : -1;
 }
 
 void deinitKeyboardHook () {
-  if (hook != NULL) {
+  if (hook) {
     UnhookWindowsHookEx(hook);
-    hook = NULL;
+    hook = nullptr;
   }
 }
 
@@ -125,7 +124,7 @@ void RegisterWindowClass(PCWSTR pszClassName, PCWSTR pszMenuName, WNDPROC lpfnWn
     wcex.lpfnWndProc    = lpfnWndProc;
     wcex.hInstance      = g_hInst;
     wcex.hIcon          = LoadIcon(g_hInst, MAKEINTRESOURCE(IDI_NOTIFICATIONICON));
-    wcex.hCursor        = LoadCursor(NULL, IDC_ARROW);
+    wcex.hCursor        = LoadCursor(nullptr, IDC_ARROW);
     wcex.hbrBackground  = (HBRUSH)(COLOR_WINDOW+1);
     wcex.lpszMenuName   = pszMenuName;
     wcex.lpszClassName  = pszClassName;
@@ -142,34 +141,34 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR /*lpCmdLine*/, int n
     WCHAR szTitle[100];
     LoadStringW(hInstance, IDS_APP_TITLE, szTitle, ARRAYSIZE(szTitle));
     HWND hwnd = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
-        CW_USEDEFAULT, 0, 250, 200, NULL, NULL, g_hInst, NULL);
+        CW_USEDEFAULT, 0, 250, 200, nullptr, nullptr, g_hInst, nullptr);
 
     char errStr[100];
 
     int err = hid_init();
     if (err < 0) {
       snprintf(errStr, sizeof(errStr), "hid_init returned %d\n", err);
-      MessageBoxA(NULL, errStr, "studio-brightness", MB_ICONINFORMATION);
+      MessageBoxA(nullptr, errStr, "studio-brightness", MB_ICONINFORMATION);
     }
 
     err = hid_getBrightness(&currentBrightness);
     if (err < 0) {
       snprintf(errStr, sizeof(errStr), "hid_getBrightness returned %d\n", err);
-      MessageBoxA(NULL, errStr, "studio-brightness", MB_ICONINFORMATION);
+      MessageBoxA(nullptr, errStr, "studio-brightness", MB_ICONINFORMATION);
       currentBrightness = 30000;
     }
 
     err = initKeyboardHook();
     if (err < 0) {
       snprintf(errStr, sizeof(errStr), "initKeyboardHook returned %d\n", err);
-      MessageBoxA(NULL, errStr, "studio-brightness", MB_ICONINFORMATION);
+      MessageBoxA(nullptr, errStr, "studio-brightness", MB_ICONINFORMATION);
     }
 
     if (hwnd)
     {
         // Main message loop:
         MSG msg;
-        while (GetMessage(&msg, NULL, 0, 0))
+        while (GetMessage(&msg, nullptr, 0, 0))
         {
             TranslateMessage(&msg);
             DispatchMessage(&msg);
@@ -192,7 +191,7 @@ BOOL AddNotificationIcon(HWND hwnd)
      __uuidof(PrinterIcon);
 #endif
     nid.uCallbackMessage = WMAPP_NOTIFYCALLBACK;
-    nid.hIcon = (HICON)LoadImage(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_MYICON), IMAGE_ICON, 0, 0, LR_DEFAULTSIZE | LR_SHARED);
+    nid.hIcon = (HICON)LoadImage(GetModuleHandle(nullptr), MAKEINTRESOURCE(IDI_MYICON), IMAGE_ICON, 0, 0, LR_DEFAULTSIZE | LR_SHARED);
     LoadString(g_hInst, IDS_TOOLTIP, nid.szTip, ARRAYSIZE(nid.szTip));
     Shell_NotifyIcon(NIM_ADD, &nid);
 
@@ -262,7 +261,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 
               SetForegroundWindow(hwnd);
 
-              int cmd = TrackPopupMenu(hmenu, TPM_LEFTALIGN | TPM_LEFTBUTTON | TPM_BOTTOMALIGN | TPM_RETURNCMD, pt.x, pt.y, 0, hwnd, NULL);
+              int cmd = TrackPopupMenu(hmenu, TPM_LEFTALIGN | TPM_LEFTBUTTON | TPM_BOTTOMALIGN | TPM_RETURNCMD, pt.x, pt.y, 0, hwnd, nullptr);
               if (cmd != 0) DestroyWindow(hwnd);
           }
           break;
