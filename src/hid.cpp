@@ -49,7 +49,7 @@ int hid_init () {
 
     // Get required size for device property
     memset(propBuf, 0, sizeof(propBuf));
-    if (!SetupDiGetDeviceRegistryProperty(hDevInfoSet, &deviceInfoData, SPDRP_HARDWAREID, &type, (PBYTE)propBuf, sizeof(propBuf), &size)) {
+    if (!SetupDiGetDeviceRegistryProperty(hDevInfoSet, &deviceInfoData, SPDRP_HARDWAREID, &type, reinterpret_cast<PBYTE>(propBuf), sizeof(propBuf), &size)) {
       SetupDiDestroyDeviceInfoList(hDevInfoSet);
       return -4;
     }
@@ -66,7 +66,7 @@ int hid_init () {
     SetupDiEnumDeviceInterfaces(hDevInfoSet, nullptr, &hidGuid, memberIndex, &deviceInterfaceData);
 
     memset(propBuf, 0, sizeof(propBuf));
-    PSP_DEVICE_INTERFACE_DETAIL_DATA deviceDetailData = (PSP_DEVICE_INTERFACE_DETAIL_DATA)propBuf;
+    PSP_DEVICE_INTERFACE_DETAIL_DATA deviceDetailData = reinterpret_cast<PSP_DEVICE_INTERFACE_DETAIL_DATA>(propBuf);
     deviceDetailData->cbSize = sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA);
 
     if (!SetupDiGetDeviceInterfaceDetail(hDevInfoSet, &deviceInterfaceData, deviceDetailData, sizeof(propBuf), &size, nullptr)) {
@@ -85,7 +85,7 @@ int hid_init () {
     }
 
     memset(propBuf, 0, sizeof(propBuf));
-    PHIDP_CAPS caps = (PHIDP_CAPS)propBuf;
+    PHIDP_CAPS caps = reinterpret_cast<PHIDP_CAPS>(propBuf);
     if (HidP_GetCaps(preparsedData, caps) != HIDP_STATUS_SUCCESS) {
       hid_deinit();
       return -8;
@@ -95,7 +95,7 @@ int hid_init () {
     featureCaps.reportLength = caps->FeatureReportByteLength;
 
     memset(propBuf, 0, sizeof(propBuf));
-    PHIDP_VALUE_CAPS valueCaps = (PHIDP_VALUE_CAPS)propBuf;
+    PHIDP_VALUE_CAPS valueCaps = reinterpret_cast<PHIDP_VALUE_CAPS>(propBuf);
 
     USHORT valueCapsLength = 2;
     HidP_GetValueCaps(HidP_Input, valueCaps, &valueCapsLength, preparsedData);
@@ -132,7 +132,7 @@ int hid_getBrightness (ULONG *val) {
   dataBuf[0] = inputCaps.reportId;
   if (!HidD_GetInputReport(hDeviceObject, dataBuf, sizeof(dataBuf))) return -2;
 
-  NTSTATUS status = HidP_GetUsageValue(HidP_Input, inputCaps.usagePage, 0, inputCaps.usage, val, preparsedData, (PCHAR)dataBuf, inputCaps.reportLength);
+  NTSTATUS status = HidP_GetUsageValue(HidP_Input, inputCaps.usagePage, 0, inputCaps.usage, val, preparsedData, reinterpret_cast<PCHAR>(dataBuf), inputCaps.reportLength);
   if (status != HIDP_STATUS_SUCCESS) return -3;
 
   return 0;
@@ -146,7 +146,7 @@ int hid_setBrightness (ULONG val) {
   dataBuf[0] = featureCaps.reportId;
   if (!HidD_GetFeature(hDeviceObject, dataBuf, sizeof(dataBuf))) return -2;
 
-  NTSTATUS status = HidP_SetUsageValue(HidP_Feature, featureCaps.usagePage, 0, featureCaps.usage, val, preparsedData, (PCHAR)dataBuf, featureCaps.reportLength);
+  NTSTATUS status = HidP_SetUsageValue(HidP_Feature, featureCaps.usagePage, 0, featureCaps.usage, val, preparsedData, reinterpret_cast<PCHAR>(dataBuf), featureCaps.reportLength);
   if (status != HIDP_STATUS_SUCCESS) return -3;
 
   if (!HidD_SetFeature(hDeviceObject, dataBuf, featureCaps.reportLength)) return -4;

@@ -77,7 +77,7 @@ static void onStepUp () {
 LRESULT hookCallback(int nCode, WPARAM wParam, LPARAM lParam) {
   if (nCode < 0) return CallNextHookEx(hook, nCode, wParam, lParam);
 
-  KBDLLHOOKSTRUCT kbdStruct = *((KBDLLHOOKSTRUCT*)lParam);
+  KBDLLHOOKSTRUCT kbdStruct = *reinterpret_cast<KBDLLHOOKSTRUCT*>(lParam);
   if (wParam == WM_KEYDOWN) {
     if (kbdStruct.vkCode == HOLD_KEY_1) {
       holdKey1Down = true;
@@ -119,7 +119,7 @@ void RegisterWindowClass(PCWSTR pszClassName, PCWSTR pszMenuName, WNDPROC lpfnWn
     wcex.hInstance      = g_hInst;
     wcex.hIcon          = LoadIcon(g_hInst, MAKEINTRESOURCE(IDI_NOTIFICATIONICON));
     wcex.hCursor        = LoadCursor(nullptr, IDC_ARROW);
-    wcex.hbrBackground  = (HBRUSH)(COLOR_WINDOW+1);
+    wcex.hbrBackground  = reinterpret_cast<HBRUSH>(COLOR_WINDOW+1);
     wcex.lpszMenuName   = pszMenuName;
     wcex.lpszClassName  = pszClassName;
     RegisterClassExW(&wcex);
@@ -177,7 +177,7 @@ BOOL AddNotificationIcon(HWND hwnd)
     nid.uFlags = NIF_ICON | NIF_TIP | NIF_MESSAGE | NIF_SHOWTIP | NIF_GUID;
     nid.guidItem = GUID_PrinterIcon;
     nid.uCallbackMessage = WMAPP_NOTIFYCALLBACK;
-    nid.hIcon = (HICON)LoadImage(GetModuleHandle(nullptr), MAKEINTRESOURCE(IDI_MYICON), IMAGE_ICON, 0, 0, LR_DEFAULTSIZE | LR_SHARED);
+    nid.hIcon = static_cast<HICON>(LoadImage(GetModuleHandle(nullptr), MAKEINTRESOURCE(IDI_MYICON), IMAGE_ICON, 0, 0, LR_DEFAULTSIZE | LR_SHARED));
     LoadString(g_hInst, IDS_TOOLTIP, nid.szTip, ARRAYSIZE(nid.szTip));
     Shell_NotifyIcon(NIM_ADD, &nid);
 

@@ -14,8 +14,12 @@ target_include_directories(studio-brightness PRIVATE include)
 
 target_link_libraries(studio-brightness PRIVATE hid setupapi wbemuuid comctl32 User32 Shell32 Gdi32)
 
-target_compile_options(studio-brightness PRIVATE "$<$<BOOL:${MSVC}>:/W4>")
-
 target_link_options(studio-brightness PRIVATE "$<$<BOOL:${MINGW}>:-municode>")
+
+if(MSVC)
+  target_compile_options(studio-brightness PRIVATE /W4)
+elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+  target_compile_options(studio-brightness PRIVATE -Wall -Wold-style-cast)
+endif()
 
 install(TARGETS studio-brightness)
