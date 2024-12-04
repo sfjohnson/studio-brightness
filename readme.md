@@ -9,18 +9,13 @@ To exit, left or right click on the icon in the taskbar notification area and cl
 
 ## Building
 
-Pick either one of `build.bat` or CMake to build:
+Pick either one of `build.bat` or CMake to build the executable "bin/studio-brightness.exe":
 
-Run `build.bat` in the Developer Command Prompt where cl.exe and rc.exe are in PATH.
+* run `build.bat` in the Developer Command Prompt where cl.exe and rc.exe are in PATH.
+* CMake works with compilers including Visual Studio, Intel oneAPI, MinGW GCC, Clang
 
-OR
+    ```sh
+    cmake -B bin
 
-CMake works with Visual Studio or Intel oneAPI compiler:
-
-```sh
-cmake -B bin
-
-cmake --build bin
-```
-
-The executable "bin/studio-brightness.exe" will be created.
+    cmake --build bin
+    ```
