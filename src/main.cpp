@@ -14,6 +14,7 @@
 #include <strsafe.h>
 #include "resource.h"
 #include "hid.h"
+#include <initguid.h>
 
 static HINSTANCE g_hInst = nullptr;
 
@@ -21,13 +22,8 @@ static UINT const WMAPP_NOTIFYCALLBACK = WM_APP + 1;
 
 static wchar_t const szWindowClass[] = L"NotificationIconTest";
 
-#ifdef __MINGW32__
-#include <initguid.h>
+// Use a guid to uniquely identify our icon "9D0B8B92-4E1C-488e-A1E1-2331AFCE2CB5"
 DEFINE_GUID(GUID_PrinterIcon, 0x9D0B8B92, 0x4E1C, 0x488e, 0xA1, 0xE1, 0x23, 0x31, 0xAF, 0xCE, 0x2C, 0xB5);
-#else
-// Use a guid to uniquely identify our icon
-class __declspec(uuid("9D0B8B92-4E1C-488e-A1E1-2331AFCE2CB5")) PrinterIcon;
-#endif
 
 // Forward declarations of functions included in this code module:
 void                RegisterWindowClass(PCWSTR pszClassName, PCWSTR pszMenuName, WNDPROC lpfnWndProc);
@@ -131,7 +127,7 @@ void RegisterWindowClass(PCWSTR pszClassName, PCWSTR pszMenuName, WNDPROC lpfnWn
     RegisterClassExW(&wcex);
 }
 
-int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR /*lpCmdLine*/, int nCmdShow)
+int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, [[maybe_unused]] PWSTR lpCmdLine, [[maybe_unused]] int nCmdShow)
 {
     g_hInst = hInstance;
     RegisterWindowClass(szWindowClass, MAKEINTRESOURCEW(IDC_NOTIFICATIONICON), WndProc);
@@ -184,12 +180,7 @@ BOOL AddNotificationIcon(HWND hwnd)
     // add the icon, setting the icon, tooltip, and callback message.
     // the icon will be identified with the GUID
     nid.uFlags = NIF_ICON | NIF_TIP | NIF_MESSAGE | NIF_SHOWTIP | NIF_GUID;
-    nid.guidItem =
-#ifdef __MINGW32__
-        GUID_PrinterIcon;
-#else
-     __uuidof(PrinterIcon);
-#endif
+    nid.guidItem = GUID_PrinterIcon;
     nid.uCallbackMessage = WMAPP_NOTIFYCALLBACK;
     nid.hIcon = (HICON)LoadImage(GetModuleHandle(nullptr), MAKEINTRESOURCE(IDI_MYICON), IMAGE_ICON, 0, 0, LR_DEFAULTSIZE | LR_SHARED);
     LoadString(g_hInst, IDS_TOOLTIP, nid.szTip, ARRAYSIZE(nid.szTip));
@@ -204,12 +195,7 @@ BOOL DeleteNotificationIcon()
 {
     NOTIFYICONDATA nid = {sizeof(nid)};
     nid.uFlags = NIF_GUID;
-    nid.guidItem =
-#ifdef __MINGW32__
-        GUID_PrinterIcon;
-#else
-        __uuidof(PrinterIcon);
-#endif
+    nid.guidItem = GUID_PrinterIcon;
     return Shell_NotifyIcon(NIM_DELETE, &nid);
 }
 
