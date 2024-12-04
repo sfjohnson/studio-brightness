@@ -15,6 +15,8 @@
 #include "resource.h"
 #include "hid.h"
 #include <initguid.h>
+#include <format>
+#include <cstdlib>
 
 static HINSTANCE g_hInst = nullptr;
 
@@ -53,9 +55,7 @@ static void onStepDown () {
 
   int err = hid_setBrightness(currentBrightness);
   if (err < 0) {
-    char errStr[100];
-    snprintf(errStr, sizeof(errStr), "hid_setBrightness returned %d\n", err);
-    MessageBoxA(nullptr, errStr, "studio-brightness", MB_ICONINFORMATION);
+    MessageBoxA(nullptr, std::format("hid_setBrightness returned {}\n", err).data(), "studio-brightness", MB_ICONERROR);
     currentBrightness = 30000;
   }
 }
@@ -69,9 +69,7 @@ static void onStepUp () {
 
   int err = hid_setBrightness(currentBrightness);
   if (err < 0) {
-    char errStr[100];
-    snprintf(errStr, sizeof(errStr), "hid_setBrightness returned %d\n", err);
-    MessageBoxA(nullptr, errStr, "studio-brightness", MB_ICONINFORMATION);
+    MessageBoxA(nullptr, std::format("hid_setBrightness returned {}\n", err).data(), "studio-brightness", MB_ICONERROR);
     currentBrightness = 30000;
   }
 }
@@ -139,25 +137,22 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, [[maybe_unused]] PWSTR lpC
     HWND hwnd = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
         CW_USEDEFAULT, 0, 250, 200, nullptr, nullptr, g_hInst, nullptr);
 
-    char errStr[100];
-
     int err = hid_init();
     if (err < 0) {
-      snprintf(errStr, sizeof(errStr), "hid_init returned %d\n", err);
-      MessageBoxA(nullptr, errStr, "studio-brightness", MB_ICONINFORMATION);
+      MessageBoxA(nullptr, std::format("hid_init returned {}", err).data(), "studio-brightness", MB_ICONERROR);
+      return EXIT_FAILURE;
     }
 
     err = hid_getBrightness(&currentBrightness);
     if (err < 0) {
-      snprintf(errStr, sizeof(errStr), "hid_getBrightness returned %d\n", err);
-      MessageBoxA(nullptr, errStr, "studio-brightness", MB_ICONINFORMATION);
+      MessageBoxA(nullptr, std::format("hid_getBrightness returned {}", err).data(), "studio-brightness", MB_ICONERROR);
       currentBrightness = 30000;
     }
 
     err = initKeyboardHook();
     if (err < 0) {
-      snprintf(errStr, sizeof(errStr), "initKeyboardHook returned %d\n", err);
-      MessageBoxA(nullptr, errStr, "studio-brightness", MB_ICONINFORMATION);
+      MessageBoxA(nullptr, std::format("initKeyboardhook returned {}", err).data(), "studio-brightness", MB_ICONERROR);
+      return EXIT_FAILURE;
     }
 
     if (hwnd)
@@ -170,7 +165,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, [[maybe_unused]] PWSTR lpC
             DispatchMessage(&msg);
         }
     }
-    return 0;
+    return EXIT_SUCCESS;
 }
 
 BOOL AddNotificationIcon(HWND hwnd)

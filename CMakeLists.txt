@@ -8,7 +8,7 @@ project(StudioBrightness LANGUAGES CXX)
 
 add_executable(studio-brightness WIN32 src/main.cpp src/hid.cpp studio-brightness.rc)
 
-target_compile_features(studio-brightness PRIVATE cxx_std_17)
+target_compile_features(studio-brightness PRIVATE cxx_std_20)
 
 target_include_directories(studio-brightness PRIVATE include)
 

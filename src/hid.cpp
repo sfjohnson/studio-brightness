@@ -60,7 +60,7 @@ int hid_init () {
       strstr(propBuf, collectionStr))
       continue;
 
-    // printf("Device found: %s\n", propBuf);
+    // std::printf("Device found: %s\n", propBuf);
 
     deviceInterfaceData.cbSize = sizeof(SP_DEVICE_INTERFACE_DATA);
     SetupDiEnumDeviceInterfaces(hDevInfoSet, nullptr, &hidGuid, memberIndex, &deviceInterfaceData);
