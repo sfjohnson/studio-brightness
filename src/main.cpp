@@ -18,9 +18,9 @@
 
 static HINSTANCE g_hInst = nullptr;
 
-static UINT const WMAPP_NOTIFYCALLBACK = WM_APP + 1;
+constexpr UINT WMAPP_NOTIFYCALLBACK = WM_APP + 1;
 
-static wchar_t const szWindowClass[] = L"NotificationIconTest";
+constexpr wchar_t szWindowClass[] = L"NotificationIconTest";
 
 // Use a guid to uniquely identify our icon "9D0B8B92-4E1C-488e-A1E1-2331AFCE2CB5"
 DEFINE_GUID(GUID_PrinterIcon, 0x9D0B8B92, 0x4E1C, 0x488e, 0xA1, 0xE1, 0x23, 0x31, 0xAF, 0xCE, 0x2C, 0xB5);
@@ -31,13 +31,13 @@ LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 BOOL                AddNotificationIcon(HWND hwnd);
 BOOL                DeleteNotificationIcon();
 
-#define BRIGHTNESS_STEP 5000
-#define BRIGHTNESS_MIN 400
-#define BRIGHTNESS_MAX 60000
-#define HOLD_KEY_1 VK_LSHIFT
-#define HOLD_KEY_2 VK_LWIN
-#define DOWN_KEY VK_LEFT
-#define UP_KEY VK_RIGHT
+constexpr ULONG BRIGHTNESS_STEP = 5000;
+constexpr ULONG BRIGHTNESS_MIN = 400;
+constexpr ULONG BRIGHTNESS_MAX = 60000;
+constexpr DWORD HOLD_KEY_1 = VK_LSHIFT;
+constexpr DWORD HOLD_KEY_2 = VK_LWIN;
+constexpr DWORD DOWN_KEY = VK_LEFT;
+constexpr DWORD UP_KEY = VK_RIGHT;
 
 static HHOOK hook = nullptr;
 static bool holdKey1Down = false;
