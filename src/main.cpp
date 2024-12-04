@@ -4,7 +4,7 @@
 // THE IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A
 // PARTICULAR PURPOSE.
 // Copyright (c) Microsoft Corporation. All rights reserved
-// 
+//
 // This derivative is sublicensed as Mozilla Public License Version 2.0
 
 #define WIN32_LEAN_AND_MEAN
@@ -21,8 +21,13 @@ static UINT const WMAPP_NOTIFYCALLBACK = WM_APP + 1;
 
 static wchar_t const szWindowClass[] = L"NotificationIconTest";
 
+#ifdef __MINGW32__
+#include <initguid.h>
+DEFINE_GUID(GUID_PrinterIcon, 0x9D0B8B92, 0x4E1C, 0x488e, 0xA1, 0xE1, 0x23, 0x31, 0xAF, 0xCE, 0x2C, 0xB5);
+#else
 // Use a guid to uniquely identify our icon
 class __declspec(uuid("9D0B8B92-4E1C-488e-A1E1-2331AFCE2CB5")) PrinterIcon;
+#endif
 
 // Forward declarations of functions included in this code module:
 void                RegisterWindowClass(PCWSTR pszClassName, PCWSTR pszMenuName, WNDPROC lpfnWndProc);
@@ -54,7 +59,7 @@ static void onStepDown () {
   if (err < 0) {
     char errStr[100];
     snprintf(errStr, sizeof(errStr), "hid_setBrightness returned %d\n", err);
-    MessageBox(NULL, errStr, "studio-brightness", MB_ICONINFORMATION);
+    MessageBoxA(NULL, errStr, "studio-brightness", MB_ICONINFORMATION);
     currentBrightness = 30000;
   }
 }
@@ -70,7 +75,7 @@ static void onStepUp () {
   if (err < 0) {
     char errStr[100];
     snprintf(errStr, sizeof(errStr), "hid_setBrightness returned %d\n", err);
-    MessageBox(NULL, errStr, "studio-brightness", MB_ICONINFORMATION);
+    MessageBoxA(NULL, errStr, "studio-brightness", MB_ICONINFORMATION);
     currentBrightness = 30000;
   }
 }
@@ -144,20 +149,20 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR /*lpCmdLine*/, int n
     int err = hid_init();
     if (err < 0) {
       snprintf(errStr, sizeof(errStr), "hid_init returned %d\n", err);
-      MessageBox(NULL, errStr, "studio-brightness", MB_ICONINFORMATION);
+      MessageBoxA(NULL, errStr, "studio-brightness", MB_ICONINFORMATION);
     }
 
     err = hid_getBrightness(&currentBrightness);
     if (err < 0) {
       snprintf(errStr, sizeof(errStr), "hid_getBrightness returned %d\n", err);
-      MessageBox(NULL, errStr, "studio-brightness", MB_ICONINFORMATION);
+      MessageBoxA(NULL, errStr, "studio-brightness", MB_ICONINFORMATION);
       currentBrightness = 30000;
     }
 
     err = initKeyboardHook();
     if (err < 0) {
       snprintf(errStr, sizeof(errStr), "initKeyboardHook returned %d\n", err);
-      MessageBox(NULL, errStr, "studio-brightness", MB_ICONINFORMATION);
+      MessageBoxA(NULL, errStr, "studio-brightness", MB_ICONINFORMATION);
     }
 
     if (hwnd)
@@ -180,7 +185,12 @@ BOOL AddNotificationIcon(HWND hwnd)
     // add the icon, setting the icon, tooltip, and callback message.
     // the icon will be identified with the GUID
     nid.uFlags = NIF_ICON | NIF_TIP | NIF_MESSAGE | NIF_SHOWTIP | NIF_GUID;
-    nid.guidItem = __uuidof(PrinterIcon);
+    nid.guidItem =
+#ifdef __MINGW32__
+        GUID_PrinterIcon;
+#else
+     __uuidof(PrinterIcon);
+#endif
     nid.uCallbackMessage = WMAPP_NOTIFYCALLBACK;
     nid.hIcon = (HICON)LoadImage(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_MYICON), IMAGE_ICON, 0, 0, LR_DEFAULTSIZE | LR_SHARED);
     LoadString(g_hInst, IDS_TOOLTIP, nid.szTip, ARRAYSIZE(nid.szTip));
@@ -195,7 +205,12 @@ BOOL DeleteNotificationIcon()
 {
     NOTIFYICONDATA nid = {sizeof(nid)};
     nid.uFlags = NIF_GUID;
-    nid.guidItem = __uuidof(PrinterIcon);
+    nid.guidItem =
+#ifdef __MINGW32__
+        GUID_PrinterIcon;
+#else
+        __uuidof(PrinterIcon);
+#endif
     return Shell_NotifyIcon(NIM_DELETE, &nid);
 }
 
