@@ -4,7 +4,7 @@
 // THE IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A
 // PARTICULAR PURPOSE.
 // Copyright (c) Microsoft Corporation. All rights reserved
-// 
+//
 // This derivative is sublicensed as Mozilla Public License Version 2.0
 
 #define WIN32_LEAN_AND_MEAN
@@ -14,15 +14,18 @@
 #include <strsafe.h>
 #include "resource.h"
 #include "hid.h"
+#include <initguid.h>
+#include <format>
+#include <cstdlib>
 
-static HINSTANCE g_hInst = NULL;
+static HINSTANCE g_hInst = nullptr;
 
-static UINT const WMAPP_NOTIFYCALLBACK = WM_APP + 1;
+constexpr UINT WMAPP_NOTIFYCALLBACK = WM_APP + 1;
 
-static wchar_t const szWindowClass[] = L"NotificationIconTest";
+constexpr wchar_t szWindowClass[] = L"NotificationIconTest";
 
-// Use a guid to uniquely identify our icon
-class __declspec(uuid("9D0B8B92-4E1C-488e-A1E1-2331AFCE2CB5")) PrinterIcon;
+// Use a guid to uniquely identify our icon "9D0B8B92-4E1C-488e-A1E1-2331AFCE2CB5"
+DEFINE_GUID(GUID_PrinterIcon, 0x9D0B8B92, 0x4E1C, 0x488e, 0xA1, 0xE1, 0x23, 0x31, 0xAF, 0xCE, 0x2C, 0xB5);
 
 // Forward declarations of functions included in this code module:
 void                RegisterWindowClass(PCWSTR pszClassName, PCWSTR pszMenuName, WNDPROC lpfnWndProc);
@@ -30,15 +33,15 @@ LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 BOOL                AddNotificationIcon(HWND hwnd);
 BOOL                DeleteNotificationIcon();
 
-#define BRIGHTNESS_STEP 5000
-#define BRIGHTNESS_MIN 400
-#define BRIGHTNESS_MAX 60000
-#define HOLD_KEY_1 VK_LSHIFT
-#define HOLD_KEY_2 VK_LWIN
-#define DOWN_KEY VK_LEFT
-#define UP_KEY VK_RIGHT
+constexpr ULONG BRIGHTNESS_STEP = 5000;
+constexpr ULONG BRIGHTNESS_MIN = 400;
+constexpr ULONG BRIGHTNESS_MAX = 60000;
+constexpr DWORD HOLD_KEY_1 = VK_LSHIFT;
+constexpr DWORD HOLD_KEY_2 = VK_LWIN;
+constexpr DWORD DOWN_KEY = VK_LEFT;
+constexpr DWORD UP_KEY = VK_RIGHT;
 
-static HHOOK hook = NULL;
+static HHOOK hook = nullptr;
 static bool holdKey1Down = false;
 static bool holdKey2Down = false;
 static ULONG currentBrightness = 30000;
@@ -52,9 +55,7 @@ static void onStepDown () {
 
   int err = hid_setBrightness(currentBrightness);
   if (err < 0) {
-    char errStr[100];
-    snprintf(errStr, sizeof(errStr), "hid_setBrightness returned %d\n", err);
-    MessageBox(NULL, errStr, "studio-brightness", MB_ICONINFORMATION);
+    MessageBoxA(nullptr, std::format("hid_setBrightness returned {}\n", err).data(), "studio-brightness", MB_ICONERROR);
     currentBrightness = 30000;
   }
 }
@@ -68,9 +69,7 @@ static void onStepUp () {
 
   int err = hid_setBrightness(currentBrightness);
   if (err < 0) {
-    char errStr[100];
-    snprintf(errStr, sizeof(errStr), "hid_setBrightness returned %d\n", err);
-    MessageBox(NULL, errStr, "studio-brightness", MB_ICONINFORMATION);
+    MessageBoxA(nullptr, std::format("hid_setBrightness returned {}\n", err).data(), "studio-brightness", MB_ICONERROR);
     currentBrightness = 30000;
   }
 }
@@ -78,7 +77,7 @@ static void onStepUp () {
 LRESULT hookCallback(int nCode, WPARAM wParam, LPARAM lParam) {
   if (nCode < 0) return CallNextHookEx(hook, nCode, wParam, lParam);
 
-  KBDLLHOOKSTRUCT kbdStruct = *((KBDLLHOOKSTRUCT*)lParam);
+  KBDLLHOOKSTRUCT kbdStruct = *reinterpret_cast<KBDLLHOOKSTRUCT*>(lParam);
   if (wParam == WM_KEYDOWN) {
     if (kbdStruct.vkCode == HOLD_KEY_1) {
       holdKey1Down = true;
@@ -101,15 +100,14 @@ LRESULT hookCallback(int nCode, WPARAM wParam, LPARAM lParam) {
 }
 
 int initKeyboardHook () {
-  hook = SetWindowsHookExW(WH_KEYBOARD_LL, hookCallback, NULL, 0);
-  if (hook == NULL) return -1;
-  return 0;
+  hook = SetWindowsHookExW(WH_KEYBOARD_LL, hookCallback, nullptr, 0);
+  return (hook) ? 0 : -1;
 }
 
 void deinitKeyboardHook () {
-  if (hook != NULL) {
+  if (hook) {
     UnhookWindowsHookEx(hook);
-    hook = NULL;
+    hook = nullptr;
   }
 }
 
@@ -120,14 +118,14 @@ void RegisterWindowClass(PCWSTR pszClassName, PCWSTR pszMenuName, WNDPROC lpfnWn
     wcex.lpfnWndProc    = lpfnWndProc;
     wcex.hInstance      = g_hInst;
     wcex.hIcon          = LoadIcon(g_hInst, MAKEINTRESOURCE(IDI_NOTIFICATIONICON));
-    wcex.hCursor        = LoadCursor(NULL, IDC_ARROW);
-    wcex.hbrBackground  = (HBRUSH)(COLOR_WINDOW+1);
+    wcex.hCursor        = LoadCursor(nullptr, IDC_ARROW);
+    wcex.hbrBackground  = reinterpret_cast<HBRUSH>(COLOR_WINDOW+1);
     wcex.lpszMenuName   = pszMenuName;
     wcex.lpszClassName  = pszClassName;
     RegisterClassExW(&wcex);
 }
 
-int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR /*lpCmdLine*/, int nCmdShow)
+int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, [[maybe_unused]] PWSTR lpCmdLine, [[maybe_unused]] int nCmdShow)
 {
     g_hInst = hInstance;
     RegisterWindowClass(szWindowClass, MAKEINTRESOURCEW(IDC_NOTIFICATIONICON), WndProc);
@@ -137,40 +135,37 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR /*lpCmdLine*/, int n
     WCHAR szTitle[100];
     LoadStringW(hInstance, IDS_APP_TITLE, szTitle, ARRAYSIZE(szTitle));
     HWND hwnd = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
-        CW_USEDEFAULT, 0, 250, 200, NULL, NULL, g_hInst, NULL);
-
-    char errStr[100];
+        CW_USEDEFAULT, 0, 250, 200, nullptr, nullptr, g_hInst, nullptr);
 
     int err = hid_init();
     if (err < 0) {
-      snprintf(errStr, sizeof(errStr), "hid_init returned %d\n", err);
-      MessageBox(NULL, errStr, "studio-brightness", MB_ICONINFORMATION);
+      MessageBoxA(nullptr, std::format("hid_init returned {}", err).data(), "studio-brightness", MB_ICONERROR);
+      return EXIT_FAILURE;
     }
 
     err = hid_getBrightness(&currentBrightness);
     if (err < 0) {
-      snprintf(errStr, sizeof(errStr), "hid_getBrightness returned %d\n", err);
-      MessageBox(NULL, errStr, "studio-brightness", MB_ICONINFORMATION);
+      MessageBoxA(nullptr, std::format("hid_getBrightness returned {}", err).data(), "studio-brightness", MB_ICONERROR);
       currentBrightness = 30000;
     }
 
     err = initKeyboardHook();
     if (err < 0) {
-      snprintf(errStr, sizeof(errStr), "initKeyboardHook returned %d\n", err);
-      MessageBox(NULL, errStr, "studio-brightness", MB_ICONINFORMATION);
+      MessageBoxA(nullptr, std::format("initKeyboardhook returned {}", err).data(), "studio-brightness", MB_ICONERROR);
+      return EXIT_FAILURE;
     }
 
     if (hwnd)
     {
         // Main message loop:
         MSG msg;
-        while (GetMessage(&msg, NULL, 0, 0))
+        while (GetMessage(&msg, nullptr, 0, 0))
         {
             TranslateMessage(&msg);
             DispatchMessage(&msg);
         }
     }
-    return 0;
+    return EXIT_SUCCESS;
 }
 
 BOOL AddNotificationIcon(HWND hwnd)
@@ -180,9 +175,9 @@ BOOL AddNotificationIcon(HWND hwnd)
     // add the icon, setting the icon, tooltip, and callback message.
     // the icon will be identified with the GUID
     nid.uFlags = NIF_ICON | NIF_TIP | NIF_MESSAGE | NIF_SHOWTIP | NIF_GUID;
-    nid.guidItem = __uuidof(PrinterIcon);
+    nid.guidItem = GUID_PrinterIcon;
     nid.uCallbackMessage = WMAPP_NOTIFYCALLBACK;
-    nid.hIcon = (HICON)LoadImage(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_MYICON), IMAGE_ICON, 0, 0, LR_DEFAULTSIZE | LR_SHARED);
+    nid.hIcon = static_cast<HICON>(LoadImage(GetModuleHandle(nullptr), MAKEINTRESOURCE(IDI_MYICON), IMAGE_ICON, 0, 0, LR_DEFAULTSIZE | LR_SHARED));
     LoadString(g_hInst, IDS_TOOLTIP, nid.szTip, ARRAYSIZE(nid.szTip));
     Shell_NotifyIcon(NIM_ADD, &nid);
 
@@ -195,7 +190,7 @@ BOOL DeleteNotificationIcon()
 {
     NOTIFYICONDATA nid = {sizeof(nid)};
     nid.uFlags = NIF_GUID;
-    nid.guidItem = __uuidof(PrinterIcon);
+    nid.guidItem = GUID_PrinterIcon;
     return Shell_NotifyIcon(NIM_DELETE, &nid);
 }
 
@@ -247,7 +242,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 
               SetForegroundWindow(hwnd);
 
-              int cmd = TrackPopupMenu(hmenu, TPM_LEFTALIGN | TPM_LEFTBUTTON | TPM_BOTTOMALIGN | TPM_RETURNCMD, pt.x, pt.y, 0, hwnd, NULL);
+              int cmd = TrackPopupMenu(hmenu, TPM_LEFTALIGN | TPM_LEFTBUTTON | TPM_BOTTOMALIGN | TPM_RETURNCMD, pt.x, pt.y, 0, hwnd, nullptr);
               if (cmd != 0) DestroyWindow(hwnd);
           }
           break;

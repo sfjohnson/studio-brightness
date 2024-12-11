@@ -4,9 +4,9 @@
 #include <wbemidl.h>
 #include <hidsdi.h>
 #include <setupapi.h>
-#include <stdio.h>
-#include <stdint.h>
-#include <string.h>
+#include <cstdio>
+#include <cstdint>
+#include <cstring>
 
 // Apple Studio Display
 static const char vidStr[] = "VID_05AC";
@@ -15,7 +15,7 @@ static const char interfaceStr[] = "MI_07";
 static const char collectionStr[] = "Col";
 
 static HANDLE hDeviceObject = INVALID_HANDLE_VALUE;
-static PHIDP_PREPARSED_DATA preparsedData = NULL;
+static PHIDP_PREPARSED_DATA preparsedData = nullptr;
 
 static struct {
   USHORT reportLength;
@@ -35,7 +35,7 @@ int hid_init () {
 
   HidD_GetHidGuid(&hidGuid);
 
-  HDEVINFO hDevInfoSet = SetupDiGetClassDevs(&hidGuid, NULL, 0, DIGCF_PRESENT | DIGCF_DEVICEINTERFACE);
+  HDEVINFO hDevInfoSet = SetupDiGetClassDevs(&hidGuid, nullptr, 0, DIGCF_PRESENT | DIGCF_DEVICEINTERFACE);
   if (hDevInfoSet == INVALID_HANDLE_VALUE) return -2;
 
   for (DWORD memberIndex = 0; ; memberIndex++) {
@@ -49,27 +49,27 @@ int hid_init () {
 
     // Get required size for device property
     memset(propBuf, 0, sizeof(propBuf));
-    if (!SetupDiGetDeviceRegistryProperty(hDevInfoSet, &deviceInfoData, SPDRP_HARDWAREID, &type, (PBYTE)propBuf, sizeof(propBuf), &size)) {
+    if (!SetupDiGetDeviceRegistryProperty(hDevInfoSet, &deviceInfoData, SPDRP_HARDWAREID, &type, reinterpret_cast<PBYTE>(propBuf), sizeof(propBuf), &size)) {
       SetupDiDestroyDeviceInfoList(hDevInfoSet);
       return -4;
     }
 
-    if (strstr(propBuf, vidStr) == NULL ||
-      strstr(propBuf, pidStr) == NULL ||
-      strstr(propBuf, interfaceStr) == NULL ||
-      strstr(propBuf, collectionStr) != NULL)
+    if (!strstr(propBuf, vidStr) ||
+      !strstr(propBuf, pidStr) ||
+      !strstr(propBuf, interfaceStr) ||
+      strstr(propBuf, collectionStr))
       continue;
 
-    // printf("Device found: %s\n", propBuf);
-    
+    // std::printf("Device found: %s\n", propBuf);
+
     deviceInterfaceData.cbSize = sizeof(SP_DEVICE_INTERFACE_DATA);
-    SetupDiEnumDeviceInterfaces(hDevInfoSet, NULL, &hidGuid, memberIndex, &deviceInterfaceData);
+    SetupDiEnumDeviceInterfaces(hDevInfoSet, nullptr, &hidGuid, memberIndex, &deviceInterfaceData);
 
     memset(propBuf, 0, sizeof(propBuf));
-    PSP_DEVICE_INTERFACE_DETAIL_DATA deviceDetailData = (PSP_DEVICE_INTERFACE_DETAIL_DATA)propBuf;
+    PSP_DEVICE_INTERFACE_DETAIL_DATA deviceDetailData = reinterpret_cast<PSP_DEVICE_INTERFACE_DETAIL_DATA>(propBuf);
     deviceDetailData->cbSize = sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA);
 
-    if (!SetupDiGetDeviceInterfaceDetail(hDevInfoSet, &deviceInterfaceData, deviceDetailData, sizeof(propBuf), &size, NULL)) {
+    if (!SetupDiGetDeviceInterfaceDetail(hDevInfoSet, &deviceInterfaceData, deviceDetailData, sizeof(propBuf), &size, nullptr)) {
       SetupDiDestroyDeviceInfoList(hDevInfoSet);
       return -5;
     }
@@ -85,7 +85,7 @@ int hid_init () {
     }
 
     memset(propBuf, 0, sizeof(propBuf));
-    PHIDP_CAPS caps = (PHIDP_CAPS)propBuf;
+    PHIDP_CAPS caps = reinterpret_cast<PHIDP_CAPS>(propBuf);
     if (HidP_GetCaps(preparsedData, caps) != HIDP_STATUS_SUCCESS) {
       hid_deinit();
       return -8;
@@ -95,7 +95,7 @@ int hid_init () {
     featureCaps.reportLength = caps->FeatureReportByteLength;
 
     memset(propBuf, 0, sizeof(propBuf));
-    PHIDP_VALUE_CAPS valueCaps = (PHIDP_VALUE_CAPS)propBuf;
+    PHIDP_VALUE_CAPS valueCaps = reinterpret_cast<PHIDP_VALUE_CAPS>(propBuf);
 
     USHORT valueCapsLength = 2;
     HidP_GetValueCaps(HidP_Input, valueCaps, &valueCapsLength, preparsedData);
@@ -107,7 +107,7 @@ int hid_init () {
     inputCaps.reportId = valueCaps[0].ReportID;
     inputCaps.usage = valueCaps[0].NotRange.Usage;
     inputCaps.usagePage = valueCaps[0].UsagePage;
-    
+
     memset(propBuf, 0, sizeof(propBuf));
     valueCapsLength = 2;
     HidP_GetValueCaps(HidP_Feature, valueCaps, &valueCapsLength, preparsedData);
@@ -132,7 +132,7 @@ int hid_getBrightness (ULONG *val) {
   dataBuf[0] = inputCaps.reportId;
   if (!HidD_GetInputReport(hDeviceObject, dataBuf, sizeof(dataBuf))) return -2;
 
-  NTSTATUS status = HidP_GetUsageValue(HidP_Input, inputCaps.usagePage, 0, inputCaps.usage, val, preparsedData, (PCHAR)dataBuf, inputCaps.reportLength);
+  NTSTATUS status = HidP_GetUsageValue(HidP_Input, inputCaps.usagePage, 0, inputCaps.usage, val, preparsedData, reinterpret_cast<PCHAR>(dataBuf), inputCaps.reportLength);
   if (status != HIDP_STATUS_SUCCESS) return -3;
 
   return 0;
@@ -146,7 +146,7 @@ int hid_setBrightness (ULONG val) {
   dataBuf[0] = featureCaps.reportId;
   if (!HidD_GetFeature(hDeviceObject, dataBuf, sizeof(dataBuf))) return -2;
 
-  NTSTATUS status = HidP_SetUsageValue(HidP_Feature, featureCaps.usagePage, 0, featureCaps.usage, val, preparsedData, (PCHAR)dataBuf, featureCaps.reportLength);
+  NTSTATUS status = HidP_SetUsageValue(HidP_Feature, featureCaps.usagePage, 0, featureCaps.usage, val, preparsedData, reinterpret_cast<PCHAR>(dataBuf), featureCaps.reportLength);
   if (status != HIDP_STATUS_SUCCESS) return -3;
 
   if (!HidD_SetFeature(hDeviceObject, dataBuf, featureCaps.reportLength)) return -4;
@@ -155,9 +155,9 @@ int hid_setBrightness (ULONG val) {
 }
 
 void hid_deinit () {
-  if (preparsedData != NULL) {
+  if (preparsedData) {
     HidD_FreePreparsedData(preparsedData);
-    preparsedData = NULL;
+    preparsedData = nullptr;
   }
 
   if (hDeviceObject != INVALID_HANDLE_VALUE) {
