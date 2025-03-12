@@ -23,5 +23,6 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: bin/studio-brightness.exe
+          tag_name: 'feature'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
