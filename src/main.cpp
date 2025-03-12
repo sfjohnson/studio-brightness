@@ -33,9 +33,7 @@ LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 BOOL                AddNotificationIcon(HWND hwnd);
 BOOL                DeleteNotificationIcon();
 
-constexpr ULONG BRIGHTNESS_STEP = 5000;
-constexpr ULONG BRIGHTNESS_MIN = 400;
-constexpr ULONG BRIGHTNESS_MAX = 60000;
+constexpr ULONG BRIGHTNESS_STEPS[15] = { 400, 2400, 4400, 7200, 10000, 15000, 20000, 25000, 30000, 35000, 40000, 45000, 50000, 55000, 60000 };
 constexpr DWORD HOLD_KEY_1 = VK_LSHIFT;
 constexpr DWORD HOLD_KEY_2 = VK_LWIN;
 constexpr DWORD DOWN_KEY = VK_LEFT;
@@ -44,32 +42,31 @@ constexpr DWORD UP_KEY = VK_RIGHT;
 static HHOOK hook = nullptr;
 static bool holdKey1Down = false;
 static bool holdKey2Down = false;
+static ULONG currentBrightnessIndex = 8;
 static ULONG currentBrightness = 30000;
 
 static void onStepDown () {
-  if (currentBrightness > BRIGHTNESS_MIN + BRIGHTNESS_STEP) {
-    currentBrightness -= BRIGHTNESS_STEP;
-  } else {
-    currentBrightness = BRIGHTNESS_MIN;
+  if (currentBrightnessIndex > 0) {
+    currentBrightness = BRIGHTNESS_STEPS[--currentBrightnessIndex];
   }
 
   int err = hid_setBrightness(currentBrightness);
   if (err < 0) {
     MessageBoxA(nullptr, std::format("hid_setBrightness returned {}\n", err).data(), "studio-brightness", MB_ICONERROR);
+    currentBrightnessIndex = 8;
     currentBrightness = 30000;
   }
 }
 
 static void onStepUp () {
-  if (currentBrightness < BRIGHTNESS_MAX - BRIGHTNESS_STEP) {
-    currentBrightness += BRIGHTNESS_STEP;
-  } else {
-    currentBrightness = BRIGHTNESS_MAX;
+  if (currentBrightnessIndex < 14) {
+    currentBrightness = BRIGHTNESS_STEPS[++currentBrightnessIndex];
   }
 
   int err = hid_setBrightness(currentBrightness);
   if (err < 0) {
     MessageBoxA(nullptr, std::format("hid_setBrightness returned {}\n", err).data(), "studio-brightness", MB_ICONERROR);
+    currentBrightnessIndex = 8;
     currentBrightness = 30000;
   }
 }
@@ -144,8 +141,15 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, [[maybe_unused]] PWSTR lpC
     }
 
     err = hid_getBrightness(&currentBrightness);
+
+    // find the BRIGHTNESS_STEPS[currentBrightnessIndex] nearest to currentBrightness
+    for (currentBrightnessIndex = 0; currentBrightnessIndex < 15; currentBrightnessIndex++) {
+      if (BRIGHTNESS_STEPS[currentBrightnessIndex] > currentBrightness) break;
+    }
+
     if (err < 0) {
       MessageBoxA(nullptr, std::format("hid_getBrightness returned {}", err).data(), "studio-brightness", MB_ICONERROR);
+      currentBrightnessIndex = 8;
       currentBrightness = 30000;
     }
 
