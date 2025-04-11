@@ -229,6 +229,40 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
         }
         break;
 
+    case WM_MEASUREITEM:
+    {
+        LPMEASUREITEMSTRUCT pmis = (LPMEASUREITEMSTRUCT)lParam;
+        pmis->itemWidth = 250; // Specify width
+        pmis->itemHeight = 25; // Specify height
+        return TRUE;
+    }
+    case WM_DRAWITEM:
+    {
+      LPDRAWITEMSTRUCT pdis = (LPDRAWITEMSTRUCT)lParam;
+      HDC hdc = pdis->hDC;
+      RECT rect = pdis->rcItem;
+
+      // Draw menu text and shortcut aligned
+      if (pdis->itemID == 100) {
+          RECT shortcutRect = rect;
+          shortcutRect.left += 20;
+          DrawTextW(hdc, L"Exit", -1, &shortcutRect, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
+      } else if (pdis->itemID == 101) {
+          RECT shortcutRect = rect;
+          shortcutRect.left += 20;
+          DrawTextW(hdc, L"Increase Brightness", -1, &shortcutRect, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
+          shortcutRect.left += 120;
+          DrawTextW(hdc, L"LShift+LWin+Right", -1, &shortcutRect, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
+      } else if (pdis->itemID == 102) {
+          RECT shortcutRect = rect;
+          shortcutRect.left += 20;
+          DrawTextW(hdc, L"Decrease Brightness", -1, &shortcutRect, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
+          shortcutRect.left += 120;
+          DrawTextW(hdc, L"LShift+LWin+Left", -1, &shortcutRect, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
+      }
+      return TRUE;
+    }
+
     case WMAPP_NOTIFYCALLBACK:
         switch (LOWORD(lParam)) {
           case NIN_SELECT:
@@ -238,12 +272,34 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
               GetCursorPos(&pt);
 
               HMENU hmenu = CreatePopupMenu();
-              InsertMenuW(hmenu, 0, MF_BYPOSITION | MF_STRING, 100, L"Exit");
+              InsertMenuW(hmenu, 0, MF_BYPOSITION | MF_OWNERDRAW, 100, L"Exit");
+              InsertMenuW(hmenu, 0, MF_BYPOSITION | MF_SEPARATOR, 0, NULL);
+              InsertMenuW(hmenu, 0, MF_BYPOSITION | MF_OWNERDRAW, 102, L"Decrease Brightness");
+              InsertMenuW(hmenu, 0, MF_BYPOSITION | MF_OWNERDRAW, 101, L"Increase Brightness");
 
               SetForegroundWindow(hwnd);
 
               int cmd = TrackPopupMenu(hmenu, TPM_LEFTALIGN | TPM_LEFTBUTTON | TPM_BOTTOMALIGN | TPM_RETURNCMD, pt.x, pt.y, 0, hwnd, nullptr);
-              if (cmd != 0) DestroyWindow(hwnd);
+              switch(cmd)
+              {
+                case 100:
+                {
+                  DestroyWindow(hwnd);
+                  break;
+                }
+
+                case 101:
+                {
+                  onStepUp();
+                  break;
+                }
+
+                case 102:
+                {
+                  onStepDown();
+                  break;
+                }
+              }
           }
           break;
         }
