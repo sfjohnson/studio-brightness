@@ -18,6 +18,8 @@
 #include <format>
 #include <cstdlib>
 
+#define DEBUG_MESSAGES 0
+
 static HINSTANCE g_hInst = nullptr;
 
 constexpr UINT WMAPP_NOTIFYCALLBACK = WM_APP + 1;
@@ -52,7 +54,9 @@ static void onStepDown () {
 
   int err = hid_setBrightness(currentBrightness);
   if (err < 0) {
+    #if DEBUG_MESSAGES
     MessageBoxA(nullptr, std::format("hid_setBrightness returned {}\n", err).data(), "studio-brightness", MB_ICONERROR);
+    #endif
     currentBrightnessIndex = 8;
     currentBrightness = 30000;
   }
@@ -65,7 +69,9 @@ static void onStepUp () {
 
   int err = hid_setBrightness(currentBrightness);
   if (err < 0) {
+    #if DEBUG_MESSAGES
     MessageBoxA(nullptr, std::format("hid_setBrightness returned {}\n", err).data(), "studio-brightness", MB_ICONERROR);
+    #endif
     currentBrightnessIndex = 8;
     currentBrightness = 30000;
   }
@@ -134,7 +140,9 @@ int APIENTRY wWinMain (HINSTANCE hInstance, HINSTANCE, [[maybe_unused]] PWSTR lp
 
   int err = hid_init();
   if (err < 0) {
+    #if DEBUG_MESSAGES
     MessageBoxA(nullptr, std::format("hid_init returned {}", err).data(), "studio-brightness", MB_ICONERROR);
+    #endif
     return EXIT_FAILURE;
   }
 
@@ -146,14 +154,18 @@ int APIENTRY wWinMain (HINSTANCE hInstance, HINSTANCE, [[maybe_unused]] PWSTR lp
     }
 
     if (err < 0) {
+      #if DEBUG_MESSAGES
       MessageBoxA(nullptr, std::format("hid_getBrightness returned {}", err).data(), "studio-brightness", MB_ICONERROR);
+      #endif
       currentBrightnessIndex = 8;
       currentBrightness = 30000;
     }
 
   err = initKeyboardHook();
   if (err < 0) {
+    #if DEBUG_MESSAGES
     MessageBoxA(nullptr, std::format("initKeyboardhook returned {}", err).data(), "studio-brightness", MB_ICONERROR);
+    #endif
     return EXIT_FAILURE;
   }
 
