@@ -18,7 +18,9 @@
 #include <format>
 #include <cstdlib>
 
+#ifndef DEBUG_MESSAGES
 #define DEBUG_MESSAGES 0
+#endif
 
 static HINSTANCE g_hInst = nullptr;
 
@@ -164,7 +166,7 @@ int APIENTRY wWinMain (HINSTANCE hInstance, HINSTANCE, [[maybe_unused]] PWSTR lp
   err = initKeyboardHook();
   if (err < 0) {
     #if DEBUG_MESSAGES
-    MessageBoxA(nullptr, std::format("initKeyboardhook returned {}", err).data(), "studio-brightness", MB_ICONERROR);
+    MessageBoxA(nullptr, std::format("initKeyboardHook returned {}", err).data(), "studio-brightness", MB_ICONERROR);
     #endif
     return EXIT_FAILURE;
   }
@@ -176,6 +178,8 @@ int APIENTRY wWinMain (HINSTANCE hInstance, HINSTANCE, [[maybe_unused]] PWSTR lp
       TranslateMessage(&msg);
       DispatchMessage(&msg);
     }
+  } else {
+    return EXIT_FAILURE;
   }
   return EXIT_SUCCESS;
 }

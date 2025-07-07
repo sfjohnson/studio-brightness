@@ -11,11 +11,27 @@ To exit, left or right click on the icon in the taskbar notification area and cl
 
 Pick either one of `build.bat` or CMake to build the executable "bin/studio-brightness.exe":
 
-* run `build.bat` in the Developer Command Prompt where cl.exe and rc.exe are in PATH.
-* CMake works with compilers including Visual Studio, Intel oneAPI, MinGW GCC, Clang
+Run `build.bat` in the Developer Command Prompt where cl.exe and rc.exe are in PATH.
 
-    ```sh
-    cmake -B bin
+Alternatively, CMake works with compilers including Visual Studio, Intel oneAPI, MinGW GCC, Clang, and more.
+The popup windows that appear on errors are disabled in Release builds.
+To enable them, set CMAKE_BUILD_TYPE=Debug in the CMake command line or in the CMake GUI.
 
-    cmake --build bin
-    ```
+Release build:
+
+```sh
+cmake -B bin
+
+cmake --build bin --config Release
+```
+
+To build in Debug mode, enabling popup windows on error, use the following commands:
+
+```sh
+cmake -B bin
+
+cmake --build bin --config Debug
+```
+
+Because the main entry point is wWinMain, the return code is always 0.
+If studio-brightness fails to start or run correctly, try building in CMake Debug build type to see the error message in a popup window.
