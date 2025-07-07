@@ -284,7 +284,7 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 
           HMENU hmenu = CreatePopupMenu();
           InsertMenuW(hmenu, 0, MF_BYPOSITION | MF_OWNERDRAW, 100, L"Exit");
-          InsertMenuW(hmenu, 0, MF_BYPOSITION | MF_SEPARATOR, 0, NULL);
+          InsertMenuW(hmenu, 0, MF_BYPOSITION | MF_SEPARATOR, 0, nullptr);
           InsertMenuW(hmenu, 0, MF_BYPOSITION | MF_OWNERDRAW, 102, L"Decrease Brightness");
           InsertMenuW(hmenu, 0, MF_BYPOSITION | MF_OWNERDRAW, 101, L"Increase Brightness");
 
