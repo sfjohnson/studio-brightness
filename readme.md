@@ -15,7 +15,7 @@ Run `build.bat` in the Developer Command Prompt where cl.exe and rc.exe are in P
 
 Alternatively, CMake works with compilers including Visual Studio, Intel oneAPI, MinGW GCC, Clang, and more.
 The popup windows that appear on errors are disabled in Release builds.
-To enable them, set CMAKE_BUILD_TYPE=Debug in the CMake command line or in the CMake GUI.
+To enable them, build in Debug mode.
 
 Release build:
 
@@ -25,7 +25,7 @@ cmake -B bin
 cmake --build bin --config Release
 ```
 
-To build in Debug mode, enabling popup windows on error, use the following commands:
+Debug build, enabling popup windows on error:
 
 ```sh
 cmake -B bin
