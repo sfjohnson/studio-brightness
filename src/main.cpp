@@ -241,7 +241,7 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 
     case WM_MEASUREITEM:
     {
-      LPMEASUREITEMSTRUCT pmis = (LPMEASUREITEMSTRUCT)lParam;
+      LPMEASUREITEMSTRUCT pmis = reinterpret_cast<LPMEASUREITEMSTRUCT>(lParam);
       pmis->itemWidth = 250; // Specify width
       pmis->itemHeight = 25; // Specify height
       return TRUE;
@@ -249,7 +249,7 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 
     case WM_DRAWITEM:
     {
-      LPDRAWITEMSTRUCT pdis = (LPDRAWITEMSTRUCT)lParam;
+      LPDRAWITEMSTRUCT pdis = reinterpret_cast<LPDRAWITEMSTRUCT>(lParam);
       HDC hdc = pdis->hDC;
       RECT rect = pdis->rcItem;
 
