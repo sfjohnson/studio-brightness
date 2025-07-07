@@ -18,7 +18,9 @@
 #include <format>
 #include <cstdlib>
 
+#ifndef DEBUG_MESSAGES
 #define DEBUG_MESSAGES 0
+#endif
 
 static HINSTANCE g_hInst = nullptr;
 
@@ -115,7 +117,8 @@ void deinitKeyboardHook () {
 }
 
 void RegisterWindowClass (PCWSTR pszClassName, PCWSTR pszMenuName, WNDPROC lpfnWndProc) {
-  WNDCLASSEXW wcex = {sizeof(wcex)};
+  WNDCLASSEXW wcex = {};
+  wcex.cbSize        = sizeof(WNDCLASSEXW);
   wcex.style          = CS_HREDRAW | CS_VREDRAW;
   wcex.lpfnWndProc    = lpfnWndProc;
   wcex.hInstance      = g_hInst;
@@ -139,7 +142,10 @@ int APIENTRY wWinMain (HINSTANCE hInstance, HINSTANCE, [[maybe_unused]] PWSTR lp
     CW_USEDEFAULT, 0, 250, 200, nullptr, nullptr, g_hInst, nullptr);
 
   int err = hid_init();
-  if (err < 0) {
+  if (err == -11) {
+      MessageBoxA(nullptr, "Apple Studio monitor not found. Please ensure the device is connected and try again.", "studio-brightness", MB_ICONERROR);
+      return EXIT_FAILURE;
+  } else if (err < 0) {
     #if DEBUG_MESSAGES
     MessageBoxA(nullptr, std::format("hid_init returned {}", err).data(), "studio-brightness", MB_ICONERROR);
     #endif
@@ -164,7 +170,7 @@ int APIENTRY wWinMain (HINSTANCE hInstance, HINSTANCE, [[maybe_unused]] PWSTR lp
   err = initKeyboardHook();
   if (err < 0) {
     #if DEBUG_MESSAGES
-    MessageBoxA(nullptr, std::format("initKeyboardhook returned {}", err).data(), "studio-brightness", MB_ICONERROR);
+    MessageBoxA(nullptr, std::format("initKeyboardHook returned {}", err).data(), "studio-brightness", MB_ICONERROR);
     #endif
     return EXIT_FAILURE;
   }
@@ -176,12 +182,15 @@ int APIENTRY wWinMain (HINSTANCE hInstance, HINSTANCE, [[maybe_unused]] PWSTR lp
       TranslateMessage(&msg);
       DispatchMessage(&msg);
     }
+  } else {
+    return EXIT_FAILURE;
   }
   return EXIT_SUCCESS;
 }
 
 BOOL AddNotificationIcon (HWND hwnd) {
-  NOTIFYICONDATA nid = {sizeof(nid)};
+  NOTIFYICONDATA nid = {};
+  nid.cbSize = sizeof(NOTIFYICONDATA);
   nid.hWnd = hwnd;
   // add the icon, setting the icon, tooltip, and callback message.
   // the icon will be identified with the GUID
@@ -199,10 +208,11 @@ BOOL AddNotificationIcon (HWND hwnd) {
 
 BOOL DeleteNotificationIcon ()
 {
-    NOTIFYICONDATA nid = {sizeof(nid)};
-    nid.uFlags = NIF_GUID;
-    nid.guidItem = GUID_PrinterIcon;
-    return Shell_NotifyIcon(NIM_DELETE, &nid);
+  NOTIFYICONDATA nid = {};
+  nid.cbSize = sizeof(nid);
+  nid.uFlags = NIF_GUID;
+  nid.guidItem = GUID_PrinterIcon;
+  return Shell_NotifyIcon(NIM_DELETE, &nid);
 }
 
 LRESULT CALLBACK WndProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) {
@@ -241,7 +251,7 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 
     case WM_MEASUREITEM:
     {
-      LPMEASUREITEMSTRUCT pmis = (LPMEASUREITEMSTRUCT)lParam;
+      LPMEASUREITEMSTRUCT pmis = reinterpret_cast<LPMEASUREITEMSTRUCT>(lParam);
       pmis->itemWidth = 250; // Specify width
       pmis->itemHeight = 25; // Specify height
       return TRUE;
@@ -249,7 +259,7 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 
     case WM_DRAWITEM:
     {
-      LPDRAWITEMSTRUCT pdis = (LPDRAWITEMSTRUCT)lParam;
+      LPDRAWITEMSTRUCT pdis = reinterpret_cast<LPDRAWITEMSTRUCT>(lParam);
       HDC hdc = pdis->hDC;
       RECT rect = pdis->rcItem;
 
@@ -284,7 +294,7 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 
           HMENU hmenu = CreatePopupMenu();
           InsertMenuW(hmenu, 0, MF_BYPOSITION | MF_OWNERDRAW, 100, L"Exit");
-          InsertMenuW(hmenu, 0, MF_BYPOSITION | MF_SEPARATOR, 0, NULL);
+          InsertMenuW(hmenu, 0, MF_BYPOSITION | MF_SEPARATOR, 0, nullptr);
           InsertMenuW(hmenu, 0, MF_BYPOSITION | MF_OWNERDRAW, 102, L"Decrease Brightness");
           InsertMenuW(hmenu, 0, MF_BYPOSITION | MF_OWNERDRAW, 101, L"Increase Brightness");
 

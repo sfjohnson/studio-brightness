@@ -43,7 +43,9 @@ int hid_init () {
 
     // Get SP_DEVINFO_DATA for this member.
     if (!SetupDiEnumDeviceInfo(hDevInfoSet, memberIndex, &deviceInfoData)) {
+      DWORD err = GetLastError();
       SetupDiDestroyDeviceInfoList(hDevInfoSet);
+      if (err == ERROR_NO_MORE_ITEMS) break;
       return -3;
     }
 
@@ -122,6 +124,7 @@ int hid_init () {
 
     return 0;
   }
+  return -11; // Device not found
 }
 
 int hid_getBrightness (ULONG *val) {
