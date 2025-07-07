@@ -141,7 +141,10 @@ int APIENTRY wWinMain (HINSTANCE hInstance, HINSTANCE, [[maybe_unused]] PWSTR lp
     CW_USEDEFAULT, 0, 250, 200, nullptr, nullptr, g_hInst, nullptr);
 
   int err = hid_init();
-  if (err < 0) {
+  if (err == -11) {
+      MessageBoxA(nullptr, "Apple Studio monitor not found. Please ensure the device is connected and try again.", "studio-brightness", MB_ICONERROR);
+      return EXIT_FAILURE;
+  } else if (err < 0) {
     #if DEBUG_MESSAGES
     MessageBoxA(nullptr, std::format("hid_init returned {}", err).data(), "studio-brightness", MB_ICONERROR);
     #endif
