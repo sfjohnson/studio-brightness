@@ -117,7 +117,8 @@ void deinitKeyboardHook () {
 }
 
 void RegisterWindowClass (PCWSTR pszClassName, PCWSTR pszMenuName, WNDPROC lpfnWndProc) {
-  WNDCLASSEXW wcex = {sizeof(wcex)};
+  WNDCLASSEXW wcex = {};
+  wcex.cbSize        = sizeof(WNDCLASSEXW);
   wcex.style          = CS_HREDRAW | CS_VREDRAW;
   wcex.lpfnWndProc    = lpfnWndProc;
   wcex.hInstance      = g_hInst;
@@ -185,7 +186,8 @@ int APIENTRY wWinMain (HINSTANCE hInstance, HINSTANCE, [[maybe_unused]] PWSTR lp
 }
 
 BOOL AddNotificationIcon (HWND hwnd) {
-  NOTIFYICONDATA nid = {sizeof(nid)};
+  NOTIFYICONDATA nid = {};
+  nid.cbSize = sizeof(NOTIFYICONDATA);
   nid.hWnd = hwnd;
   // add the icon, setting the icon, tooltip, and callback message.
   // the icon will be identified with the GUID
@@ -203,10 +205,11 @@ BOOL AddNotificationIcon (HWND hwnd) {
 
 BOOL DeleteNotificationIcon ()
 {
-    NOTIFYICONDATA nid = {sizeof(nid)};
-    nid.uFlags = NIF_GUID;
-    nid.guidItem = GUID_PrinterIcon;
-    return Shell_NotifyIcon(NIM_DELETE, &nid);
+  NOTIFYICONDATA nid = {};
+  nid.cbSize = sizeof(nid);
+  nid.uFlags = NIF_GUID;
+  nid.guidItem = GUID_PrinterIcon;
+  return Shell_NotifyIcon(NIM_DELETE, &nid);
 }
 
 LRESULT CALLBACK WndProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) {
