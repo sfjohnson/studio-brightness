@@ -142,6 +142,36 @@ int APIENTRY wWinMain (HINSTANCE hInstance, HINSTANCE, [[maybe_unused]] PWSTR lp
     CW_USEDEFAULT, 0, 250, 200, nullptr, nullptr, g_hInst, nullptr);
 
   int err = hid_init();
+
+  // Wait for monitor to be connected (-11 indicates no monitor detected)
+  if (err == -11) {
+    constexpr int wait_monitor_connection = 1000; // milliseconds, arbitrary amount
+    constexpr int max_retries = 180; // e.g., try for 180 seconds
+    int retry_count = 0;
+    if(!SetTimer(hwnd, 1, wait_monitor_connection, nullptr))
+      return EXIT_FAILURE;
+
+    MSG msg;
+    while (err != 0 && GetMessage(&msg, nullptr, 0, 0) > 0) {
+      if (msg.message == WM_TIMER) {
+        err = hid_init();
+        retry_count++;
+        if (err == 0 || retry_count >= max_retries) {
+          KillTimer(hwnd, 1);
+          if (err != 0) {
+            #if DEBUG_MESSAGES
+            MessageBoxA(nullptr, std::format("Monitor not detected after waiting for {} seconds.", max_retries * wait_monitor_connection / 1000).data(), "studio-brightness", MB_ICONERROR);
+            #endif
+            return EXIT_FAILURE;
+          }
+          break;
+        }
+      }
+      TranslateMessage(&msg);
+      DispatchMessage(&msg);
+    }
+  }
+
   if (err < 0) {
     #if DEBUG_MESSAGES
     MessageBoxA(nullptr, std::format("hid_init returned {}", err).data(), "studio-brightness", MB_ICONERROR);
